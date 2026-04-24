@@ -257,6 +257,7 @@ public sealed class DataManagerForm : Form
                 SavePersistedState();
             }
         };
+        _stateSaveTimer.Start();
 
         _adapterCheckTimer.Interval = 2000;
         _adapterCheckTimer.Tick += (_, _) => CheckBindAdapterHealth();
@@ -328,8 +329,6 @@ public sealed class DataManagerForm : Form
         _serverToggleButton.Font = new Font("Segoe UI Semibold", 10.5f);
         _serverToggleButton.Click += async (_, _) => await ToggleServerAsync();
         row1.Controls.Add(_serverToggleButton);
-
-
 
         row1.Controls.Add(new Label
         {
@@ -407,7 +406,7 @@ public sealed class DataManagerForm : Form
         _grid.RowTemplate.Height = 34;
         _grid.DefaultCellStyle.Padding = new Padding(2, 1, 2, 1);
         _grid.EnableHeadersVisualStyles = false;
-        _grid.ColumnHeadersHeight = 38;
+        _grid.ColumnHeadersHeight = 44;
 
         AddGridColumns();
 
@@ -433,9 +432,9 @@ public sealed class DataManagerForm : Form
     private void BuildHeader()
     {
         _headerPanel.Dock = DockStyle.Top;
-        _headerPanel.Height = 96;
+        _headerPanel.Height = 112;
         _headerPanel.BackColor = Color.FromArgb(48, 48, 48);
-        _headerPanel.Padding = new Padding(14, 8, 14, 8);
+        _headerPanel.Padding = new Padding(14, 10, 14, 10);
 
         var titleContainer = new TableLayoutPanel
         {
@@ -533,7 +532,7 @@ public sealed class DataManagerForm : Form
         _grid.Columns.Add(new DataGridViewButtonColumn
         {
             Name = "ChooseFolder",
-            HeaderText = "",
+            HeaderText = "Aktion",
             Text = "Ordner wählen",
             UseColumnTextForButtonValue = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
@@ -740,7 +739,6 @@ public sealed class DataManagerForm : Form
         g.FillPath(bg, path);
         g.DrawPath(border, path);
 
-        // server rack
         int rackX = size / 2 - 17;
         int rackY = size / 2 - 16;
         int rackW = 34;
@@ -761,7 +759,6 @@ public sealed class DataManagerForm : Form
         g.DrawLine(linePen, rackX + 12, rackY + 5, rackX + 28, rackY + 5);
         g.DrawLine(linePen, rackX + 12, rackY + 20, rackX + 28, rackY + 20);
 
-        // small chart hint
         using Pen chartPen = new Pen(Color.FromArgb(55, 55, 55), 3f)
         {
             StartCap = LineCap.Round,
@@ -854,7 +851,7 @@ Inhalt:
 
 Farben
 ------
-Offline-Geräte werden gelb markiert, damit sie aus der Entfernung sofort sichtbar sind.
+Offline-Geräte werden gelb markiert, Online-Geräte grün.
 
 Assets
 ------
@@ -954,6 +951,17 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
     private void MarkStateDirty()
     {
         _stateDirty = true;
+    }
+
+    private void SavePersistedStateQuietly()
+    {
+        try
+        {
+            SavePersistedState();
+        }
+        catch
+        {
+        }
     }
 
     private void LoadPersistedState()
@@ -1349,7 +1357,6 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
             _refreshIpButton.Enabled = false;
 
             _uiTimer.Start();
-            _stateSaveTimer.Start();
             _adapterCheckTimer.Start();
         }
 
@@ -1379,7 +1386,6 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
             _cts = null;
 
             _uiTimer.Stop();
-            _stateSaveTimer.Stop();
             _adapterCheckTimer.Stop();
 
             _portUpDown.Enabled = true;
@@ -1416,7 +1422,6 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
                 _cts = null;
 
                 _uiTimer.Stop();
-                _stateSaveTimer.Stop();
                 _adapterCheckTimer.Stop();
 
                 _portUpDown.Enabled = true;
@@ -1731,11 +1736,11 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
 
         if (string.Equals(status, "offline", StringComparison.OrdinalIgnoreCase))
         {
-            row.DefaultCellStyle.BackColor = Color.FromArgb(255, 255, 0);
+            row.DefaultCellStyle.BackColor = Color.FromArgb(255, 244, 163);
         }
         else
         {
-            row.DefaultCellStyle.BackColor = Color.White;
+            row.DefaultCellStyle.BackColor = Color.FromArgb(198, 239, 206);
         }
     }
 
@@ -1787,6 +1792,7 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
             _deviceOutputFolders[deviceId] = selectedPath;
             _gridDirty = true;
             MarkStateDirty();
+            SavePersistedStateQuietly();
 
             if (_devices.TryGetValue(deviceId, out DeviceSnapshot? snapshot))
             {
@@ -1839,6 +1845,7 @@ Wenn die Taskleisten-Iconanzeige trotz neuer Datei nicht sofort aktualisiert wir
 
         _gridDirty = true;
         MarkStateDirty();
+        SavePersistedStateQuietly();
         Log($"Device entfernt: {deviceId}");
     }
 
