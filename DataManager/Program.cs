@@ -107,7 +107,7 @@ public sealed class DataManagerForm : Form
     // APP VERSION
     // =========================================================================================
 
-    private const string AppVersion = "1.2.0";
+    private const string AppVersion = "1.3.0";
 
     // =========================================================================================
     // NETWORK / TELEMETRY CONSTANTS
